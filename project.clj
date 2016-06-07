@@ -19,7 +19,20 @@
                   :scope "provided"]
                  [secretary "1.2.3"]
                  [venantius/accountant "0.1.7"
-                  :exclusions [org.clojure/tools.reader]]]
+                  :exclusions [org.clojure/tools.reader]]
+                 ;;?????????????
+                 ;; no database? [yesql "0.5.3"]
+                 [clojurewerkz/machine_head "1.0.0-beta9"]
+                 [overtone/at-at "1.2.0"]
+                 [http-kit "2.1.18"]
+                 [org.clojure/data.json "0.2.6"]
+                 ;; no auth [buddy "0.13.0"]    ;;JWT
+                 [com.rpl/specter "0.11.0"]
+                 [cljs-ajax "0.5.5"]
+                 [clj-time "0.11.0"]
+                 [clojurewerkz/machine_head "1.0.0-beta9"]  ;;mqtt
+                 [org.clojure/core.async "0.2.374"]
+                 ]
 
   :plugins [[lein-environ "1.0.2"]
             [lein-cljsbuild "1.1.1"]
@@ -92,8 +105,8 @@
                                 (pjstadig.humane-test-output/activate!)]
 
                    :figwheel {:http-server-root "public"
-                              :server-port 3449
-                              :nrepl-port 7002
+                              :server-port 3448
+                              :nrepl-port 7001
                               :nrepl-middleware ["cemerick.piggieback/wrap-cljs-repl"
                                                  ]
                               :css-dirs ["resources/public/css"]
