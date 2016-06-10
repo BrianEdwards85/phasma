@@ -1,8 +1,9 @@
 (ns phasma.handler
-  (:require [compojure.core :refer [GET defroutes]]
+  (:require [compojure.core :refer [GET routes]]
             [compojure.route :refer [not-found resources]]
             [hiccup.page :refer [include-js include-css html5]]
             [phasma.middleware :refer [wrap-middleware]]
+            [phasma.controler.http :as http-controler]
             [config.core :refer [env]]))
 
 (def mount-target
@@ -17,21 +18,28 @@
    [:meta {:charset "utf-8"}]
    [:meta {:name "viewport"
            :content "width=device-width, initial-scale=1"}]
-   (include-css (if (env :dev) "/phasma/css/site.css" "/phasma/css/site.min.css"))])
+   (include-js "https://code.jquery.com/jquery-2.2.4.js")
+   (include-css "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css")
+   (include-js "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.js")
+  ;; (include-css (if (env :dev) "/css/site.css" "/css/site.min.css"))
+
+   ])
 
 (def loading-page
   (html5
     (head)
     [:body {:class "body-container"}
      mount-target
-     (include-js "/phasma/js/app.js")]))
+     (include-js "/js/app.js")]))
 
 
-(defroutes routes
-  (GET "/" [] loading-page)
-  (GET "/about" [] loading-page)
-  
-  (resources "/")
-  (not-found "Not Found"))
+(def route
+  (routes
+    (GET "/" [] loading-page)
+    (GET "/dev" [] loading-page)
+    (GET "/about" [] loading-page)
+    (resources "/")
+    (not-found "Not Found")
+  ))
 
-(def app (wrap-middleware #'routes))
+(def app (wrap-middleware (routes http-controler/route route)))

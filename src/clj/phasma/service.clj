@@ -12,6 +12,9 @@
   ([] (get-devices @state))
   ([s] (set (sm/select [s/ALL :id]  s))))
 
+(defn get-device [device s]
+  (first (sm/select [s/ALL (id-filter device)]  s)))
+
 (defn get-device-init
   ([device] (get-device-init @state))
   ([device s] (first (sm/select [s/ALL (id-filter device) :init]  s))))
@@ -19,6 +22,10 @@
 (defn set-device-init
   ([device init] (swap! state #(set-device-init device init %)))
   ([device init s] (sm/transform [s/ALL (id-filter device) :init] (fn [_] init) s)))
+
+(defn inc-mills
+  ([i] (swap! state #(inc-mills i %)))
+  ([i s] (sm/transform [s/ALL :mills] #(+ i %) s)))
 
 (defn get-device-pins
   ([device] (get-device-pins device @state))
@@ -31,7 +38,7 @@
 
 (defn get-pin 
   ([device pin] (get-pin device pin @state))
-  ([device pin s] (first (sm/select [s/ALL (id-filter device) :ports s/ALL (device-filter pin)] s))))
+  ([device pin s] (first (sm/select [s/ALL (id-filter device) :ports s/ALL (id-filter pin)] s))))
 
 (defn merge-pin [old new]
   (let [id (:id old)

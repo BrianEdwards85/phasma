@@ -22,9 +22,8 @@
                   :exclusions [org.clojure/tools.reader]]
                  ;;?????????????
                  ;; no database? [yesql "0.5.3"]
-                 [clojurewerkz/machine_head "1.0.0-beta9"]
                  [overtone/at-at "1.2.0"]
-                 [http-kit "2.1.18"]
+                 [http-kit "2.1.19"]
                  [org.clojure/data.json "0.2.6"]
                  ;; no auth [buddy "0.13.0"]    ;;JWT
                  [com.rpl/specter "0.11.0"]
@@ -107,6 +106,7 @@
                    :figwheel {:http-server-root "public"
                               :server-port 3448
                               :nrepl-port 7001
+                              :server-ip   "0.0.0.0"
                               :nrepl-middleware ["cemerick.piggieback/wrap-cljs-repl"
                                                  ]
                               :css-dirs ["resources/public/css"]

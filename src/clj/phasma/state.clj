@@ -6,8 +6,44 @@
 
 (def init-state
   [
-    {
-     :id "ESP0001"
+   {:id "ESP0002"
+    :init false
+    :poll 100
+    :mills 0
+    :ports [
+            {:id 3
+             :type :out
+             :state 0}
+            {:id 4
+             :type :out
+             :state 0}
+            {:id 5
+             :type :out
+             :state 0}
+            {:id 6
+             :type :out
+             :state 0}
+            ]
+    :sensors {
+              "1wire" [
+                       {:id "BC1235"
+                        :reading 33
+                        :min 0
+                        :max 100}
+                       {:id "C12346"
+                        :reading 32
+                        :min 0
+                        :max 100}
+                       {:id "ABC124"
+                        :reading 31
+                        :min 0
+                        :max 100}
+                       ]
+              "i2c"
+              []
+              }
+    }
+    {:id "ESP0001"
      :init false
      :poll 100
      :mills 0
