@@ -16,13 +16,12 @@
 
 (defn update-pin-reading! [device id reading]
   (if-let [pin (service/get-pin device id @state)]
-    (if (= :in (:type pin))
+    (do
       (mqtt/publish (mqtt/build-path sensor-prefix location device "pin" id) (str reading))
       (swap! state #(service/set-pin device (assoc pin :state reading) %))
-      )
-   ))
+      )))
 
-(defn update-pin-state! [device id type]
+(defn update-pin-type! [device id type]
   (if-let [pin (service/get-pin device id @state)]
     (do
      (mqtt/publish (mqtt/build-path "configured" location device "pin" id) (name type))
@@ -33,5 +32,5 @@
 (defn inc-mills! [i]
   (let [s (swap! state #(service/inc-mills i %))]
     (doseq [d s]
-        (mqtt/publish (mqtt/build-path "event" location (:id d) "mills" ) (str (:mills d))))
+        (mqtt/publish (mqtt/build-path "event" location (:id d) "mills" ) (str (:mills 10))))
     ))

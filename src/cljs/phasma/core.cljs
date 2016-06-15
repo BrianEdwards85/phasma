@@ -3,6 +3,7 @@
               [reagent.session :as session]
               [secretary.core :as secretary :include-macros true]
               [phasma.state :refer [device devices device-info select-device]]
+              [phasma.service :as service]
               [accountant.core :as accountant]))
 
 ;; -------------------------
@@ -12,30 +13,114 @@
 (defn device-tabs [all-devices selected-device]
   [:ul {:class "nav nav-tabs" :style {:margin "20px 0px 22px"}}
    (for [dev all-devices]
-     [:li {:key (str "tab_" dev)} [:a
+     [:li (assoc
+           (if (= dev selected-device) {:class "active"} {})
+           :key (str "tab_" dev))
+      [:a
       (let [url (str "/#dev/" dev)]
-        (assoc
-         (if (= dev selected-device) {:class "active"} {})
-         :href url
+        {:href url
          :key (str "link_" dev)
          :on-click #(secretary/dispatch! url)
-         )
-        )
+         })
       dev]])
    ]
   )
 
+
+(defn binary-state [pin dev]
+ [:td
+  (if (= 0 (:state pin))
+    [:button
+     {:type "button"
+      :class "btn btn-default btn-sm"
+      :on-click #(service/set-pin-state dev (:id pin) 1)}
+     "Off"]
+    [:button
+     {:type "button"
+      :class "btn btn-primary btn-sm active"
+      :on-click #(service/set-pin-state dev (:id pin) 0)}
+     "On"]
+    )
+  ])
+
+(def pin-types ["out" "in" "pwm" "1wire" "i2c"])
+
+
+(defn type-selector [pin dev]
+  [:td
+   [:select
+    {:class "form-control"
+     :id (str (:id pin) "_type")
+     :key (str (:id pin) "_type")
+;;     :on-change #(.log js/console (str "CH " (-> % .-target .-value) " -> " dev ":" (:id pin)))
+     :on-change #(service/set-pin-type dev (:id pin) (-> % .-target .-value))
+     }
+    (for [tp pin-types]
+      [:option
+       (assoc
+        (if (= tp (:type pin)) {:selected true} {})
+        :key (str (:id pin) "_type_" tp)
+        :value tp
+        )
+       tp
+       ])]])
+
+(defn out-pin-row [pin dev]
+  [:tr {:key (str "opin_" (:id pin))}
+   [:td (:id pin)]
+;;   [:td "Output"]
+   [type-selector pin dev]
+   [binary-state pin dev]
+   ])
+
+(defn default-pin-row [pin dev]
+  [:tr {:key (str "opin_" (:id pin))}
+   [:td (:id pin)]
+   ;;   [:td (:type pin)]
+   [type-selector pin dev]
+   [:td (:state pin)]
+   ])
+
+
+
+
+(defn pin-row [pin dev]
+  (case (:type pin)
+    "out" [out-pin-row pin dev]
+    [default-pin-row pin dev]
+    )
+
+  )
+
+
+(defn pin-table [dev]
+  [:table {:class "table"}
+   [:thead>tr [:th "Pin"] [:th "Type"] [:th "State"]]
+   (for [pin (:ports dev)]
+     [pin-row pin (:id dev)]
+
+;;     [:tr {:key (str "pin_" (:id pin))}
+;;      [:td (:id pin)]
+;;      [:td (:type pin)]
+;;      [:td (:state pin)]]
+
+     )]
+  )
+
 (defn home-page-hash []
-  [:div [:h2 "Welcome to #phasma"]
+  [:div {:class "container"}
+   [:h2 "Welcome to #phasma"]
    [:h3 (str "Device: " @device)]
    [device-tabs @devices @device]
    [:div (str "Poll: "
               (if @device-info
-                (get @device-info "poll")
+                (:poll @device-info)
+                ;;(get @device-info "poll")
                 "(NONE)"
                 )
 
               )]
+   [pin-table @device-info]
    [:div [:a {:href "/#dev/333" :on-click #(secretary/dispatch! "/#dev/333")} "go to about page"]]])
 
 (defn home-page []

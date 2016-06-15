@@ -10,7 +10,6 @@
   (reduce #(str %1 "/" %2) "" path))
 
 (defn publish [topic payload]
-  (println topic)
   (mh/publish conn topic payload))
 
 (defn subscribe [topics handler-fn]

@@ -42,4 +42,6 @@
     (not-found "Not Found")
   ))
 
-(def app (wrap-middleware (routes http-controler/route route)))
+(def app
+  (routes http-controler/route
+          (wrap-middleware route)))

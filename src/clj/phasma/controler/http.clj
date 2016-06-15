@@ -1,9 +1,10 @@
 (ns phasma.controler.http
   (:require [clojure.data.json :as json]
-            [compojure.core :refer [GET routes]]
+            [compojure.core :refer [GET PUT routes]]
             [phasma.state :refer [state]]
             [phasma.service :as service]
             [phasma.orchestrator :refer :all]
+            [clojure.java.io :as io]
             ))
 
 
@@ -25,11 +26,43 @@
     )
   )
 
+(defn get-pin [request]
+  (let [d (get-in request [:params :device])
+        p (Integer/parseInt (get-in request [:params :pin]))]
+    (if-let [pin (service/get-pin d p @state)]
+      {:status 200
+       :headers {"Content-Type" "application/json"}
+       :body (json/write-str pin)}
+      {:status 404
+       :headers {"Content-Type" "application/json"}
+       :body (json/write-str {:error "Device pin not found"})}
+      )))
+
+(defn put-pin-state [request]
+  (let [s (Integer/parseInt (first (line-seq (io/reader (:body request) :encoding "UTF-8"))))
+        d (get-in request [:params :device])
+        p (Integer/parseInt (get-in request [:params :pin]))]
+    (update-pin-reading! d p s))
+  (device request) 
+  )
+
+
+(defn put-pin-type [request]
+  (let [t (keyword (first (line-seq (io/reader (:body request) :encoding "UTF-8"))))
+        d (get-in request [:params :device])
+        p (Integer/parseInt (get-in request [:params :pin]))]
+    (update-pin-type! d p t))
+  (device request) 
+  )
+
 
 
 (def route
   (routes
    (GET "/api/v0/devices" [] devices)
+   (PUT "/api/v0/devices/:device/pins/:pin/state" [] put-pin-state)
+   (PUT "/api/v0/devices/:device/pins/:pin/type" [] put-pin-type)
+   (GET "/api/v0/devices/:device/pins/:pin" [] get-pin)
    (GET "/api/v0/devices/:device" [] device)
    ))
 
