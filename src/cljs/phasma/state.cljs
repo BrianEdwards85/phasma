@@ -18,14 +18,8 @@
   (reset! device d)
   (reset! device-info nil)
   (GET (request-url "/api/v0/devices/" d)
-      {:handler
-       #(reset! device-info (keywordize-keys (js->clj %)))
-;;       (fn [r]
-;;         (let [m (js->clj r)]
-;;           (.log js/console (str "M: " r))
-;;           (reset! device-info (keywordize-keys m))
-;;           )
-;;         )
+      {:handler update-device-info!
+;;       #(reset! device-info (keywordize-keys (js->clj %)))
        })
   )
 
