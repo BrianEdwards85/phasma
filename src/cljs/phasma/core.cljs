@@ -2,7 +2,7 @@
     (:require [reagent.core :as reagent :refer [atom]]
               [reagent.session :as session]
               [secretary.core :as secretary :include-macros true]
-              [phasma.state :refer [device devices device-info select-device]]
+              [phasma.state :refer [device devices device-info]]
               [phasma.service :as service]
               [accountant.core :as accountant]))
 
@@ -17,7 +17,7 @@
            (if (= dev selected-device) {:class "active"} {})
            :key (str "tab_" dev))
       [:a
-      (let [url (str "/#dev/" dev)]
+      (let [url (str "/phasma/#dev/" dev)]
         {:href url
          :key (str "link_" dev)
          :on-click #(secretary/dispatch! url)
@@ -65,18 +65,23 @@
        tp
        ])]])
 
-(defn out-pin-row [pin dev]
-  [:tr {:key (str "opin_" (:id pin))}
+(defn in-pin-row [pin dev]
+  [:tr 
    [:td (:id pin)]
-;;   [:td "Output"]
+   [type-selector pin dev]
+   [binary-state pin dev]
+   ])
+
+(defn out-pin-row [pin dev]
+  [:tr 
+   [:td (:id pin)]
    [type-selector pin dev]
    [binary-state pin dev]
    ])
 
 (defn default-pin-row [pin dev]
-  [:tr {:key (str "opin_" (:id pin))}
+  [:tr 
    [:td (:id pin)]
-   ;;   [:td (:type pin)]
    [type-selector pin dev]
    [:td (:state pin)]
    ])
@@ -87,6 +92,7 @@
 (defn pin-row [pin dev]
   (case (:type pin)
     "out" [out-pin-row pin dev]
+    "in" [out-pin-row pin dev]
     [default-pin-row pin dev]
     )
 
@@ -97,14 +103,8 @@
   [:table {:class "table"}
    [:thead>tr [:th "Pin"] [:th "Type"] [:th "State"]]
    (for [pin (:ports dev)]
-     [pin-row pin (:id dev)]
-
-;;     [:tr {:key (str "pin_" (:id pin))}
-;;      [:td (:id pin)]
-;;      [:td (:type pin)]
-;;      [:td (:state pin)]]
-
-     )]
+     ^{:key (str "pin_" (:id  pin))}
+     [pin-row pin (:id dev)])]
   )
 
 (defn home-page-hash []
@@ -112,10 +112,9 @@
    [:h2 "Welcome to #phasma"]
    [:h3 (str "Device: " @device)]
    [device-tabs @devices @device]
-   [:div (str "Poll: "
+   [:div (str "Pollt: "
               (if @device-info
                 (:poll @device-info)
-                ;;(get @device-info "poll")
                 "(NONE)"
                 )
 
@@ -137,10 +136,12 @@
 ;; -------------------------
 ;; Routes
 
+(secretary/defroute "/phasma/#dev/:id"  {:as params}
+  (service/select-device (:id params))
+  (session/put! :current-page #'home-page-hash))
+
 (secretary/defroute "/#dev/:id"  {:as params}
-  (js/console.log (str "User: " (:id params)))
-  ;;  (swap! device (fn [_] (:id params)))
-  (select-device (:id params))
+  (service/select-device (:id params))
   (session/put! :current-page #'home-page-hash))
 
 (secretary/defroute "/about" []
