@@ -4,6 +4,7 @@
               [secretary.core :as secretary :include-macros true]
               [phasma.state :refer [device devices device-info]]
               [phasma.service :as service]
+              [phasma.shared.util :refer [validate-pwm]]
               [accountant.core :as accountant]))
 
 ;; -------------------------
@@ -28,7 +29,6 @@
 
 
 (defn binary-state [pin dev]
- [:td
   (if (= 0 (:state pin))
     [:button
      {:type "button"
@@ -41,86 +41,105 @@
       :on-click #(service/set-pin-state dev (:id pin) 0)}
      "On"]
     )
-  ])
+  )
 
 (def pin-types ["out" "in" "pwm" "1wire" "i2c"])
 
 
 (defn type-selector [pin dev]
-  [:td
-   [:select
-    {:class "form-control"
-     :id (str (:id pin) "_type")
-     :key (str (:id pin) "_type")
-;;     :on-change #(.log js/console (str "CH " (-> % .-target .-value) " -> " dev ":" (:id pin)))
-     :on-change #(service/set-pin-type dev (:id pin) (-> % .-target .-value))
-     }
-    (for [tp pin-types]
-      [:option
-       (assoc
-        (if (= tp (:type pin)) {:selected true} {})
-        :key (str (:id pin) "_type_" tp)
-        :value tp
-        )
-       tp
-       ])]])
+  [:select
+   {:class "form-control"
+    :id (str (:id pin) "_type")
+    :key (str (:id pin) "_type")
+    :on-change #(service/set-pin-type dev (:id pin) (-> % .-target .-value))
+    :value (:type pin)
+    }
+   (for [tp pin-types]
+     [:option
+      {:key (str (:id pin) "_type_" tp)
+        :value tp} 
+      tp
+      ])])
+
+(defn pwm-selector [pin dev]
+  (let [val (atom (:state pin))]
+    (fn []
+      [:input
+       {:type "number"
+        :min 0
+        :max 255
+        :value @val
+        :on-change #(reset! val (validate-pwm  (-> % .-target .-value)))
+        :on-blur #(service/set-pin-state dev (:id pin)  @val)}
+       ])))
+
+(defn pwm-pin-row [pin dev]
+  [:tr 
+   [:td (:id pin)]
+   [:td [type-selector pin dev]]
+   [:td [pwm-selector pin dev]]
+   ])
 
 (defn in-pin-row [pin dev]
   [:tr 
    [:td (:id pin)]
-   [type-selector pin dev]
-   [binary-state pin dev]
+   [:td [type-selector pin dev]]
+   [:td [binary-state pin dev]]
    ])
 
 (defn out-pin-row [pin dev]
   [:tr 
    [:td (:id pin)]
-   [type-selector pin dev]
-   [binary-state pin dev]
+   [:td [type-selector pin dev]]
+   [:td [binary-state pin dev]]
    ])
 
 (defn default-pin-row [pin dev]
   [:tr 
    [:td (:id pin)]
-   [type-selector pin dev]
-   [:td (:state pin)]
+   [:td [type-selector pin dev]]
+   [:td (:type pin)]
    ])
-
-
-
 
 (defn pin-row [pin dev]
   (case (:type pin)
     "out" [out-pin-row pin dev]
     "in" [out-pin-row pin dev]
+    "pwm" [pwm-pin-row pin dev]
     [default-pin-row pin dev]
-    )
-
-  )
-
+    ))
 
 (defn pin-table [dev]
   [:table {:class "table"}
    [:thead>tr [:th "Pin"] [:th "Type"] [:th "State"]]
-   (for [pin (:ports dev)]
-     ^{:key (str "pin_" (:id  pin))}
-     [pin-row pin (:id dev)])]
+   [:tbody 
+    (for [pin (:ports dev)]
+      ^{:key (str "pin_" (:id  pin))}
+      [pin-row pin (:id dev)])]]
   )
+
+(defn sensot-table [dev]
+  [:table {:class "table"}
+   [:thead>tr [:th "Type"] [:th "Sensor"] [:th "Reading"]]
+   (for [sensor-type (keys (:sensors dev))]
+     (for [sensor (get-in dev [:sensors sensor-type])]
+          [:tr {:key (str (name  sensor-type) "_sensor_" (:id sensor))}
+           [:td (name  sensor-type)] [:td (:id sensor)] [:td (:reading sensor)]])
+    )])
 
 (defn home-page-hash []
   [:div {:class "container"}
    [:h2 "Welcome to #phasma"]
    [:h3 (str "Device: " @device)]
    [device-tabs @devices @device]
-   [:div (str "Pollt: "
+   [:div (str "Poll: "
               (if @device-info
                 (:poll @device-info)
                 "(NONE)"
-                )
-
-              )]
+                ))]
    [pin-table @device-info]
-   [:div [:a {:href "/#dev/333" :on-click #(secretary/dispatch! "/#dev/333")} "go to about page"]]])
+   [sensot-table @device-info]
+   [:div [:a {:href "/#dev/ESP002" :on-click #(secretary/dispatch! "/#dev/333")} "go to about page"]]])
 
 (defn home-page []
   [:div [:h2 "Welcome to phasma"]

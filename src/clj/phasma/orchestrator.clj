@@ -13,7 +13,6 @@
       (swap! state #(service/set-sensor device proto (assoc sensor-map :reading reading) %)))
                  ))
 
-
 (defn update-pin-reading! [device id reading]
   (if-let [pin (service/get-pin device id @state)]
     (do
@@ -27,7 +26,6 @@
      (mqtt/publish (mqtt/build-path "configured" location device "pin" id) (name type))
      (swap! state #(service/set-pin device (assoc pin :type type) %))
      )))
-
 
 (defn inc-mills! [i]
   (let [s (swap! state #(service/inc-mills i %))]

@@ -25,13 +25,25 @@
   (GET (request-url "/phasma/api/v0/devices")
       {:handler update-devices!}))
 
-(defn select-device [d]
-  (reset! device d)
-  (update-device-info! nil)
+(defn get-device [d]
   (GET (request-url "/phasma/api/v0/devices/" d)
       {:handler update-device-info!})
   )
 
+(defn select-device [d]
+  (reset! device d)
+  (update-device-info! nil)
+  (get-device d))
+
 (get-devices)
+
+
+(js/setInterval
+ #(do
+    (get-devices)
+    (if (some? @device) (get-device @device))
+    )
+ 15000
+ )
 
 

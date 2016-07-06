@@ -19,6 +19,7 @@
    [:meta {:name "viewport"
            :content "width=device-width, initial-scale=1"}]
    [:title "Hello!"]
+   [:link {:rel "icon" :href "/phasma/images/favicon.png" :type "image/png" :sizes "32x32"}]
    (include-js "https://code.jquery.com/jquery-2.2.4.js")
    (include-css "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css")
    (include-js "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.js")
