@@ -2,6 +2,7 @@
      (:require [ajax.core :refer [GET PUT]]
                [reagent.core :as reagent :refer [atom]]
                [phasma.state :refer [update-device-info! update-devices! device]]
+               [phasma.shared.util :refer [new-sensor-value]]
                [clojure.walk :refer [keywordize-keys]]
      ))
 
@@ -18,6 +19,11 @@
 (defn set-pin-type [device pin type]
   (PUT (request-url "/phasma/api/v0/devices/" device "/pins/" pin "/type")
       {:body (str type)
+       :handler update-device-info!
+       }))
+(defn update-sensor [device sensor-type sensor]
+  (PUT (request-url "/phasma/api/v0/devices/" device "/sensors/" sensor-type "/" (:id sensor))
+      {:body (str (new-sensor-value sensor))
        :handler update-device-info!
        }))
 

@@ -61,6 +61,15 @@
       tp
       ])])
 
+(defn sensor-update [sensor sensor-type dev]
+  [:button
+   {:type "button"
+    :class "btn btn-default btn-sm"
+    :on-click #(service/update-sensor dev sensor-type sensor)
+    }
+   "Update"
+   ])
+
 (defn pwm-selector [pin dev]
   (let [val (atom (:state pin))]
     (fn []
@@ -77,7 +86,8 @@
   [:tr 
    [:td (:id pin)]
    [:td [type-selector pin dev]]
-   [:td [pwm-selector pin dev]]
+   [:td [pwm-selector pin dev]
+    ]
    ])
 
 (defn in-pin-row [pin dev]
@@ -118,27 +128,30 @@
       [pin-row pin (:id dev)])]]
   )
 
-(defn sensot-table [dev]
+(defn sensor-table [dev]
   [:table {:class "table"}
    [:thead>tr [:th "Type"] [:th "Sensor"] [:th "Reading"]]
    (for [sensor-type (keys (:sensors dev))]
      (for [sensor (get-in dev [:sensors sensor-type])]
           [:tr {:key (str (name  sensor-type) "_sensor_" (:id sensor))}
-           [:td (name  sensor-type)] [:td (:id sensor)] [:td (:reading sensor)]])
+           [:td (name  sensor-type)]
+           [:td (:id sensor)]
+           [:td (:reading sensor)
+            [sensor-update sensor (name  sensor-type) (:id  dev)]]])
     )])
 
 (defn home-page-hash []
   [:div {:class "container"}
-   [:h2 "Welcome to #phasma"]
-   [:h3 (str "Device: " @device)]
+   [:h2 "Welcome to Phasma"]
    [device-tabs @devices @device]
+   [:h3 (str "Device: " @device)]
    [:div (str "Poll: "
               (if @device-info
                 (:poll @device-info)
                 "(NONE)"
                 ))]
    [pin-table @device-info]
-   [sensot-table @device-info]
+   [sensor-table @device-info]
    [:div [:a {:href "/#dev/ESP002" :on-click #(secretary/dispatch! "/#dev/333")} "go to about page"]]])
 
 (defn home-page []

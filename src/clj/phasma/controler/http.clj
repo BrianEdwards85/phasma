@@ -12,8 +12,7 @@
   {:status 200
    :headers {"Content-Type" "application/json"}
    :body (json/write-str (service/get-devices @state))
-   }
-  )
+   })
 
 (defn device [request]
   (if-let [dev (service/get-device (get-in request [:params :device]) @state)]
@@ -23,8 +22,7 @@
     {:status 404
      :headers {"Content-Type" "application/json"}
      :body (json/write-str {:error "Device not found"})}
-    )
-  )
+    ))
 
 (defn get-pin [request]
   (let [d (get-in request [:params :device])
@@ -55,7 +53,15 @@
   (device request) 
   )
 
-
+(defn update-sensor-value [request]
+  (let [r (Integer/parseInt (first (line-seq (io/reader (:body request) :encoding "UTF-8"))))
+        d (get-in request [:params :device])
+        p (get-in request [:params :proto])
+        s (get-in request [:params :sensor])]
+    (println (str r ":" d ":" p ":" s))
+    (update-sensor! d p s r)
+    (device request)
+    ))
 
 (def route
   (routes
@@ -64,6 +70,7 @@
    (PUT "/api/v0/devices/:device/pins/:pin/type" [] put-pin-type)
    (GET "/api/v0/devices/:device/pins/:pin" [] get-pin)
    (GET "/api/v0/devices/:device" [] device)
+   (PUT "/api/v0/devices/:device/sensors/:proto/:sensor" [] update-sensor-value) 
    ))
 
 
